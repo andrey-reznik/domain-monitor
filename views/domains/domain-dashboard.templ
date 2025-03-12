@@ -18,8 +18,8 @@ templ DomainCard(domain configuration.Domain) {
             <input type="hidden" name="fqdn" value={ domain.FQDN } />
         </div>
         <div class="card-actions justify-end">
-        <div class={ "badge", templ.KV("badge-outline", !domain.Enabled), templ.KV("badge-success", domain.Enabled) }>Periodic Updates</div>
-          <div class={ "badge", templ.KV("badge-outline", !domain.Alerts), templ.KV("badge-success", domain.Alerts) }>Alerts Enabled</div>
+        <div class={ "badge", templ.KV("badge-outline", !domain.Enabled), templ.KV("badge-success", domain.Enabled) }>Периодические обновления</div>
+          <div class={ "badge", templ.KV("badge-outline", !domain.Alerts), templ.KV("badge-success", domain.Alerts) }>Оповещения включены</div>
         </div>
       </div>
     </div>
@@ -34,17 +34,18 @@ templ DomainCards(domains []configuration.Domain) {
 }
 
 templ WhoisError(err error) {
-    <div class="text-error">{ fmt.Sprintf("WHOIS Cache Miss. %v", err) }</div>
+    <div class="text-error">{ fmt.Sprintf("Ошибка кэша WHOIS. %v", err) }</div>
 }
 
 templ WhoisDetail(whois configuration.WhoisCache) {
     <div class="flex flex-col">
-    @WhoisDetailItem("Registrar", whois.WhoisInfo.Registrar.Name)
-    @WhoisDetailItem("Name Servers", strings.Join(whois.WhoisInfo.Domain.NameServers, ", "))
-    @WhoisDetailItem("Creation Date", whois.WhoisInfo.Domain.CreatedDateInTime.Format("2006-01-02"))
-    @WhoisDetailItem("Expiration Date", whois.WhoisInfo.Domain.ExpirationDateInTime.Format("2006-01-02"))
-    @WhoisDetailItem("Time Until Expiration", durafmt.Parse(whois.WhoisInfo.Domain.ExpirationDateInTime.Sub(time.Now())).LimitFirstN(2).String())
-    @WhoisDetailItem("WHOIS Query Date", whois.LastUpdated.Format("2006-01-02"))
+    @WhoisDetailItem("Регистратор", whois.WhoisInfo.Registrar.Name)
+    @WhoisDetailItem("Владелец", whois.WhoisInfo.Registrant.Name)
+    @WhoisDetailItem("Серверы имён", strings.Join(whois.WhoisInfo.Domain.NameServers, ", "))
+    @WhoisDetailItem("Дата регистрации", whois.WhoisInfo.Domain.CreatedDateInTime.Format("2006-01-02"))
+    @WhoisDetailItem("Дата истечения", whois.WhoisInfo.Domain.ExpirationDateInTime.Format("2006-01-02"))
+    @WhoisDetailItem("Время до истечения", durafmt.Parse(whois.WhoisInfo.Domain.ExpirationDateInTime.Sub(time.Now())).LimitFirstN(2).String())
+    @WhoisDetailItem("Последнее обновление WHOIS", whois.LastUpdated.Format("2006-01-02"))
     </div>
 }
 
@@ -66,9 +67,9 @@ templ DomainListingTbody(domains []configuration.Domain) {
             <td><input name="enabled" value="true" type="checkbox" class="checkbox checkbox-sm" /></td>
             <td><input name="alerts" value="true" type="checkbox" class="checkbox checkbox-sm"/></td>
             <td><button class="btn btn-xs" hx-include="#new-domain-input input" hx-post="/domain/new" hx-target="#domain-listing-tbody"
-            hx-swap="outerHTML" hx-trigger="click" hx-indicator="#add-new-domain-indication">Add
+            hx-swap="outerHTML" hx-trigger="click" hx-indicator="#add-new-domain-indication">Добавить
                 <div id="add-new-domain-indication" class="htmx-indicator">
-                    Loading <span class="loading loading-dots loading-xs"></span>
+                    Загрузка <span class="loading loading-dots loading-xs"></span>
                 </div>
             </button></td>
         </tr>
@@ -93,9 +94,9 @@ templ DomainTableRowInput(key string, domain configuration.Domain) {
             <td><input name="alerts" value="true" checked?={domain.Alerts} type="checkbox" class="checkbox checkbox-sm"/></td>
             <td><button class="btn btn-xs" hx-include={"#domain-input-"+key+" input"} hx-post="/domain/update" hx-target={"#domain-input-"+key}
             hx-swap="outerHTML" hx-trigger="click" hx-indicator={"#indication-"+key}>
-                Save
+                Сохранить
                 <div id={"indication-"+key} class="htmx-indicator">
-                    Loading <span class="loading loading-dots loading-xs"></span>
+                    Загрузка <span class="loading loading-dots loading-xs"></span>
                 </div>
             </button></td>
         </tr>
@@ -105,14 +106,14 @@ templ DomainTableRowInput(key string, domain configuration.Domain) {
 templ DomainTableActions(key string, fqdn string) {
     <div class="flex flex-row gap-2">
         <button class="btn btn-xs" hx-target={"#trow-"+key} hx-swap="outerHTML"
-            hx-get={"/domain/edit/"+fqdn} hx-trigger="click">Edit</button>
+            hx-get={"/domain/edit/"+fqdn} hx-trigger="click">Редактировать</button>
         <button class="btn btn-xs btn-error btn-outline" hx-delete={"/domain/" + fqdn}
             hx-target="#domain-listing-tbody" hx-swap="outerHTML" hx-trigger="click" hx-indicator={"#indicate-delete-"+key}
-            hx-confirm={"Really delete domain " + fqdn + "? This cannot be undone. (Although you can add it back.)"}>
-            Delete
+            hx-confirm={"Действительно хотите удалить домен " + fqdn + "? Это действие нельзя отменить. (Хотя вы можете добавить его снова.)"}>
+            Удалить
         </button>
         <div id={"#indicate-delete-"+key} class="htmx-indicator">
-            Loading <span class="loading loading-dots loading-xs"></span>
+            Загрузка <span class="loading loading-dots loading-xs"></span>
         </div>
     </div>
 }

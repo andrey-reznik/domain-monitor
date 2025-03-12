@@ -21,12 +21,12 @@ templ Base(includeConfig bool) {
     <script src="/js/_hyperscript.min.js"></script>
 </head>
 <body>
-<div class="container-fluid">
+<div class="container mx-auto">
     @Navigation(includeConfig)
     <div class="container-fluid" id="content">
     <div hx-get="/dashboard" hx-trigger="load">
     <p class="htmx-indicator">
-        Loading dashboard <span class="loading loading-ring loading-sm"></span>
+        Загрузка <span class="loading loading-ring loading-sm"></span>
     </p>
     </div>
 

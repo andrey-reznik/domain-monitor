@@ -33,16 +33,17 @@ func main() {
 	config := configDirectory.ReadAppConfig()
 	// configure the SMTP mailer
 	var _mailer *service.MailerService = nil
+	var _telegram *service.TelegramService = nil
 	// provide some sanity log messages, to confirm the alert and mailer settings
 	if config.Config.Alerts.SendAlerts {
-		if !config.Config.SMTP.Enabled {
-			log.Println("❌ Email notifications are disabled")
-		} else if len(config.Config.SMTP.Host) == 0 || config.Config.SMTP.Host == "smtp.example.com" {
-			log.Println("❌ SMTP is not configured")
-			config.Config.SMTP.Enabled = false
+		if !config.Config.Telegram.Enabled {
+			log.Println("❌ Telegram notifications are disabled")
+		} else if len(config.Config.Telegram.BotID) == 0 || len(config.Config.Telegram.ChatID) == 0 {
+			log.Println("❌ Telegram is not configured")
+			config.Config.Telegram.Enabled = false
 		} else {
-			_mailer = service.NewMailerService(config.Config.SMTP)
-			log.Printf("📧 Alerts configured to be sent to %s", config.Config.Alerts.Admin)
+			_telegram = service.NewTelegramService(config.Config.Telegram)
+			log.Printf("📧 Alerts configured to be sent to %s", config.Config.Telegram.ChatID)
 		}
 	} else {
 		log.Println("📵 Alerts are disabled")
@@ -77,6 +78,10 @@ func main() {
 	// if the mailer was configured, add the routes
 	if _mailer != nil {
 		handlers.SetupMailerRoutes(app, _mailer, config.Config.Alerts.Admin)
+	}
+
+	if _telegram != nil {
+		handlers.SetupTelegramRoutes(app, _telegram, config.Config.Telegram.ChatID)
 	}
 
 	// Setup whois routes
@@ -175,11 +180,11 @@ func domainExpirationCheckOnSchedule(whoisCache configuration.WhoisCacheStorage,
 					continue
 				}
 				whoisEntry.MarkAlertSent(configuration.AlertDaily)
+			}
 		}
 	}
-}
 
-time.AfterFunc(interval, func() { domainExpirationCheckOnSchedule(whoisCache, domains, mailer, appConfig, interval) })
+	time.AfterFunc(interval, func() { domainExpirationCheckOnSchedule(whoisCache, domains, mailer, appConfig, interval) })
 }
 
 // Refresh the whois cache on a schedule, and flush the cache. This runs every 6 hours.

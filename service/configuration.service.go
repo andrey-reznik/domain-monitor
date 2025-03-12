@@ -32,6 +32,10 @@ func (s *ConfigurationService) GetSMTPConfiguration() configuration.SMTPConfigur
 	return s.store.Config.SMTP
 }
 
+func (s *ConfigurationService) GetTelegramConfiguration() configuration.TelegramConfiguration {
+	return s.store.Config.Telegram
+}
+
 func (s *ConfigurationService) GetSchedulerConfiguration() configuration.SchedulerConfiguration {
 	return s.store.Config.Scheduler
 }
@@ -173,7 +177,6 @@ func (s *ConfigurationService) SetConfigurationValue(section string, key string,
 		return errors.New("configuration editing is disabled")
 	}
 
-
 	stringVal, ok := value.(string)
 	if !ok {
 		log.Println("Value is not expected type (string)")
@@ -208,6 +211,8 @@ func (s *ConfigurationService) SetConfigurationValue(section string, key string,
 		switch key {
 		case "admin":
 			s.store.Config.Alerts.Admin = stringVal
+		case "telegramAdmin":
+			s.store.Config.Alerts.TelegramAdmin = stringVal
 		case "sendAlerts":
 			s.store.Config.Alerts.SendAlerts = boolVal
 		case "send2MonthAlert":
@@ -249,6 +254,17 @@ func (s *ConfigurationService) SetConfigurationValue(section string, key string,
 			s.store.Config.SMTP.FromName = value.(string)
 		case "fromAddress":
 			s.store.Config.SMTP.FromAddress = value.(string)
+		default:
+			return &ErrInvalidConfigurationKey{
+				Key: key,
+			}
+		}
+	case "telegram":
+		switch key {
+		case "enabled":
+			s.store.Config.Telegram.Enabled = boolVal
+		case "botId":
+			s.store.Config.Telegram.BotID = value.(string)
 		default:
 			return &ErrInvalidConfigurationKey{
 				Key: key,

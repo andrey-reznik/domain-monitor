@@ -17,15 +17,15 @@ type WhoisCache struct {
 	WhoisInfo whoisparser.WhoisInfo `yaml:"whoisInfo" json:"whoisInfo"`
 	// Date this entry was last updated
 	LastUpdated time.Time `yaml:"lastUpdated" json:"lastUpdated"`
-	// Sent the 2 month alert
+	// Sent the 2-month alert
 	Sent2MonthAlert bool `yaml:"sent2MonthAlert" json:"sent2MonthAlert"`
-	// Sent the 1 month alert
+	// Sent the 1-month alert
 	Sent1MonthAlert bool `yaml:"sent1MonthAlert" json:"sent1MonthAlert"`
-	// Sent the 2 week alert
+	// Sent the 2-week alert
 	Sent2WeekAlert bool `yaml:"sent2WeekAlert" json:"sent2WeekAlert"`
-	// Sent the 1 week alert
+	// Sent the 1-week alert
 	Sent1WeekAlert bool `yaml:"sent1WeekAlert" json:"sent1WeekAlert"`
-	// Send the 3 day alert
+	// Send the 3-day alert
 	Sent3DayAlert bool `yaml:"sent3DayAlert" json:"sent3DayAlert"`
 	// Date of the last alert sent
 	LastAlertSent time.Time `yaml:"lastAlertSent" json:"lastAlertSent"`

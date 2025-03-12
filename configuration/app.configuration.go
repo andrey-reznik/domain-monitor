@@ -11,7 +11,7 @@ import (
 type AppConfiguration struct {
 	// The port the application listens on
 	Port int `yaml:"port" json:"port" default:"3124"`
-	// Allow automtic WHOIS refresh
+	// Allow automatic WHOIS refresh
 	AutomateWHOISRefresh bool `yaml:"automateWHOISRefresh" json:"automateWHOISRefresh" default:"true"`
 	// Show the configuration in the web interface. This is a security risk and should be disabled in production
 	ShowConfiguration bool `yaml:"showConfiguration" json:"showConfiguration" default:"false"`
@@ -20,6 +20,8 @@ type AppConfiguration struct {
 type AlertsConfiguration struct {
 	// The admin email address for receiving alerts
 	Admin string `yaml:"admin" json:"admin"`
+	// The admin telegram chatID for receiving alerts
+	TelegramAdmin string `yaml:"telegramAdmin" json:"telegramAdmin"`
 	// Send alerts for monitored domains
 	SendAlerts bool `yaml:"sendAlerts" json:"sendAlerts"`
 	// Send 2-month alert for domain expiry date
@@ -71,6 +73,15 @@ type SchedulerConfiguration struct {
 	UseStandardWhoisRefreshSchedule bool `yaml:"useStandardWhoisRefreshSchedule" json:"useStandardWhoisRefreshSchedule"`
 }
 
+type TelegramConfiguration struct {
+	// Telegram bot id
+	BotID string `yaml:"botId" json:"botId"`
+	// Chat id
+	ChatID string `yaml:"chatId" json:"chatId"`
+	// Enable Telegram
+	Enabled bool `yaml:"enabled" json:"enabled"`
+}
+
 type ConfigurationFile struct {
 	// The application configuration
 	App AppConfiguration `yaml:"app" json:"app"`
@@ -80,6 +91,8 @@ type ConfigurationFile struct {
 	SMTP SMTPConfiguration `yaml:"smtp" json:"smtp"`
 	// The scheduler configuration
 	Scheduler SchedulerConfiguration `yaml:"scheduler" json:"scheduler"`
+	// The Telegram configuration
+	Telegram TelegramConfiguration `yaml:"telegram" json:"telegram"`
 }
 
 type Configuration struct {
@@ -160,6 +173,13 @@ func (c *Configuration) UpdateAlertsConfiguration(data AlertsConfiguration) {
 // Update the SMTP configuration with the given data
 func (c *Configuration) UpdateSMTPConfiguration(data SMTPConfiguration) {
 	c.Config.SMTP = data
+
+	c.Flush()
+}
+
+// Update the Telegram configuration with the given data
+func (c *Configuration) UpdateTelegramConfiguration(data TelegramConfiguration) {
+	c.Config.Telegram = data
 
 	c.Flush()
 }

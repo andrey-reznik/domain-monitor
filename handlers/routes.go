@@ -60,6 +60,7 @@ func SetupConfigRoutes(app *echo.Echo, config configuration.Configuration) {
 		configGroup.GET("/app", ch.RenderAppConfiguration)
 		configGroup.GET("/domain", ch.RenderDomainConfiguration)
 		configGroup.GET("/smtp", ch.RenderSmtpConfiguration)
+		configGroup.GET("/telegram", ch.RenderTelegramConfiguration)
 		configGroup.GET("/scheduler", ch.RenderSchedulerConfiguration)
 		configGroup.GET("/alerts", ch.RenderAlertsConfiguration)
 	}
@@ -71,6 +72,14 @@ func SetupMailerRoutes(app *echo.Echo, ms *service.MailerService, alertRecipient
 	mh := NewMailerHandler(ms, alertRecipient)
 
 	mailerGroup.POST("/test", mh.HandleTestMail)
+}
+
+func SetupTelegramRoutes(app *echo.Echo, ts *service.TelegramService, chatId string) {
+	telegramGroup := app.Group("/telegram")
+
+	th := NewTelegramHandler(ts, chatId)
+
+	telegramGroup.POST("/test", th.HandleTestMessage)
 }
 
 func SetupWhoisRoutes(app *echo.Echo, ws *service.ServicesWhois) {

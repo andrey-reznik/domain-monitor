@@ -76,6 +76,11 @@ func (h *ConfigurationHandler) RenderSmtpConfiguration(c echo.Context) error {
 	return View(c, configuration.SmtpTab(h.ConfigurationService.GetSMTPConfiguration()))
 }
 
+// Render the Telegram configuration page.
+func (h *ConfigurationHandler) RenderTelegramConfiguration(c echo.Context) error {
+	return View(c, configuration.TelegramTab(h.ConfigurationService.GetTelegramConfiguration()))
+}
+
 // Render the scheduler configuration page.
 func (h *ConfigurationHandler) RenderSchedulerConfiguration(c echo.Context) error {
 	return View(c, configuration.SchedulerTab(h.ConfigurationService.GetSchedulerConfiguration()))
