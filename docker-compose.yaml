@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3124:3124"
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  app_data:

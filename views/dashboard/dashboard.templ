@@ -1,14 +1,14 @@
 package dashboard
 
 templ Dashboard() {
-    <div class="w-100">
-    <div class="px-4">
-    <h1 class="text-xl bold text-accent">Отслеживаемые Домены</h1>
-    <p class="text-xs p-1">
-        Это домены, которые в настоящее время отслеживаются. Больше можно добавить на странице конфигурации приложения.
-        Настройки SMTP, получатели оповещений и параметры генерации оповещений для доменов можно настроить там же.
-    </p>
-    </div>
-    <div hx-swap="outerHTML" hx-get="/domain/cards" hx-trigger="load"></div>
-    </div>
+	<div class="w-full">
+		<div class="px-4">
+			<h1 class="text-xl bold text-accent">Отслеживаемые Домены</h1>
+			<p class="text-xs p-1">
+				Это домены, которые в настоящее время отслеживаются. Больше можно добавить на странице конфигурации приложения.
+				Настройки SMTP, получатели оповещений и параметры генерации оповещений для доменов можно настроить там же.
+			</p>
+		</div>
+		<div hx-swap="outerHTML" hx-get="/domain/cards" hx-trigger="load"></div>
+	</div>
 }

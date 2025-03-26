@@ -12,7 +12,7 @@ const Domains = "domain.yaml"
 const WhoisCacheName = "whois-cache.yaml"
 
 // Interval for WHOIS to recheck expirations times and cache validity
-const WhoisRefreshInterval = time.Hour * 4
+const WhoisRefreshInterval = time.Minute / 6
 
 // struct for tracking the directory
 type ConfigDirectory struct {

@@ -130,7 +130,7 @@ func (w *WhoisCacheStorage) Remove(fqdn string) {
 
 func (w *WhoisCache) IsExpired() bool {
 	// If the last update was more than 30 days ago, then it's expired
-	return time.Since(w.LastUpdated) > 30*24*time.Hour
+	return time.Since(w.LastUpdated) > 24*time.Hour
 }
 
 func (w *WhoisCache) Refresh() {

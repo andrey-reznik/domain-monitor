@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"flag"
 	"fmt"
 	"log"
@@ -65,10 +66,17 @@ func main() {
 	// tell it we will provide custom error pages
 	app.HTTPErrorHandler = handlers.CustomHTTPErrorHandler
 
-	// tell it about the static asset directories
 	app.Static("/", "assets")
+	// tell it about the static asset directories
 	// use the logger middleware
 	app.Use(middleware.Logger())
+	app.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		if subtle.ConstantTimeCompare([]byte(username), []byte("nicknicklowski")) == 1 &&
+			subtle.ConstantTimeCompare([]byte(password), []byte("7nqL9fgVl4")) == 1 {
+			return true, nil
+		}
+		return false, nil // Echo сам вернёт 401 и заголовок
+	}))
 
 	// set up our routes
 	handlers.SetupRoutes(app, config.Config.App.ShowConfiguration)
@@ -105,6 +113,7 @@ func main() {
 	// This uses the WhoisRefreshInterval as the interval for the domain expiration checks
 	time.AfterFunc(60*time.Second, func() {
 		domainExpirationCheckOnSchedule(whoisCache, domains, _mailer, config.Config, configuration.WhoisRefreshInterval)
+		domainExpirationCheckOnScheduleTelegram(whoisCache, domains, _telegram, config.Config, configuration.WhoisRefreshInterval)
 		log.Printf("📆 Scheduler running domain expiration checks every %s", configuration.WhoisRefreshInterval)
 	})
 
@@ -185,6 +194,81 @@ func domainExpirationCheckOnSchedule(whoisCache configuration.WhoisCacheStorage,
 	}
 
 	time.AfterFunc(interval, func() { domainExpirationCheckOnSchedule(whoisCache, domains, mailer, appConfig, interval) })
+}
+
+// When called on schedule, check for domain expirations in the WHOIS cache and send mail
+func domainExpirationCheckOnScheduleTelegram(whoisCache configuration.WhoisCacheStorage, domains configuration.DomainConfiguration, telegram *service.TelegramService, appConfig configuration.ConfigurationFile, interval time.Duration) {
+	if telegram == nil {
+		log.Println("🚫 No telegram configured, canceling domain expiration checks.")
+		return
+	}
+
+	// for every domain in the domains configuration, if alerts are turned on, check the expiration from the WHOIS cache and then send an alert if one hasn't been sent.
+	for _, domain := range domains.DomainFile.Domains {
+		if domain.Alerts {
+			whoisEntry := whoisCache.Get(domain.FQDN)
+			if whoisEntry == nil {
+				log.Printf("❌ WHOIS entry for %s not found, skipping", domain.FQDN)
+				continue
+			}
+
+			// Get the days until expiration
+			daysUntilExpiration := whoisEntry.WhoisInfo.Domain.ExpirationDateInTime.Sub(time.Now()).Hours() / 24
+
+			// Check the 2-month, 1-month, 2-week, 1-week, 3-day and within 1 week of expiration thresholds
+			if daysUntilExpiration <= 60 && !whoisEntry.Sent2MonthAlert && appConfig.Alerts.Send2MonthAlert {
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.Alert2Months); err != nil {
+					log.Printf("❌ Failed to send 2-month alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.Alert2Months)
+			}
+			if daysUntilExpiration <= 30 && !whoisEntry.Sent1MonthAlert && appConfig.Alerts.Send1MonthAlert {
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.Alert1Month); err != nil {
+					log.Printf("❌ Failed to send 1-month alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.Alert1Month)
+			}
+			if daysUntilExpiration <= 14 && !whoisEntry.Sent2WeekAlert && appConfig.Alerts.Send2WeekAlert {
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.Alert2Weeks); err != nil {
+					log.Printf("❌ Failed to send 2-week alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.Alert2Weeks)
+			}
+			if daysUntilExpiration <= 7 && !whoisEntry.Sent1WeekAlert && appConfig.Alerts.Send1WeekAlert {
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.Alert1Week); err != nil {
+					log.Printf("❌ Failed to send 1-week alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.Alert1Week)
+			}
+			if daysUntilExpiration <= 3 && !whoisEntry.Sent3DayAlert && appConfig.Alerts.Send3DayAlert {
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.Alert3Days); err != nil {
+					log.Printf("❌ Failed to send 3-day alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.Alert3Days)
+			}
+			// The daily alerts within one week of expiration need to check the last alert sent date, and confirm that expiration is within 7 days
+			if daysUntilExpiration <= 7 && daysUntilExpiration > 0 && appConfig.Alerts.SendDailyExpiryAlert {
+				// Check if the last alert sent was on this day, month and year. If it was, don't send another alert.
+				if whoisEntry.LastAlertSent.Day() == time.Now().Day() && whoisEntry.LastAlertSent.Month() == time.Now().Month() && whoisEntry.LastAlertSent.Year() == time.Now().Year() {
+					log.Printf("⚠️ Daily alert for %s was already sent today", domain.FQDN)
+					continue
+				}
+
+				if err := telegram.SendAlert(appConfig.Alerts.TelegramAdmin, domain.FQDN, configuration.AlertDaily); err != nil {
+					log.Printf("❌ Failed to send daily alert for %s: %s", domain.FQDN, err)
+					continue
+				}
+				whoisEntry.MarkAlertSent(configuration.AlertDaily)
+			}
+		}
+	}
+
+	time.AfterFunc(interval, func() { domainExpirationCheckOnScheduleTelegram(whoisCache, domains, telegram, appConfig, interval) })
 }
 
 // Refresh the whois cache on a schedule, and flush the cache. This runs every 6 hours.

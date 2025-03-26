@@ -12,5 +12,5 @@ const (
 )
 
 func (a Alert) String() string {
-	return [...]string{"2 month alert", "1 month alert", "2 week alert", "1 week alert", "3 day alert", "daily alert"}[a]
+	return [...]string{"2 месяца", "1 месяц", "2 недели", "1 неделю", "3 дня", "Ежедневное оповещение"}[a]
 }

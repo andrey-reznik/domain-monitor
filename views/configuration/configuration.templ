@@ -14,11 +14,10 @@ templ Configuration() {
 				После внесения изменений вам потребуется перезапустить сервер, чтобы они вступили в силу.
 			</p>
 		</div>
-		<div role="tablist" class="tabs tabs-boxed">
+		<div role="tablist" class="tabs tabs-box">
 			<a role="tab" hx-target="#tabContent" hx-get="/config/app" class="transition-color tab config-tab tab-active" _="on click remove .tab-active from .config-tab then add .tab-active to me">Приложение</a>
 			<a role="tab" hx-target="#tabContent" hx-get="/config/domain" class="transition-color tab config-tab " _="on click remove .tab-active from .config-tab then add .tab-active to me">Домены</a>
 			<a role="tab" hx-target="#tabContent" hx-get="/config/alerts" class="transition-color tab config-tab" _="on click remove .tab-active from .config-tab then add .tab-active to me">Оповещения</a>
-			<a role="tab" hx-target="#tabContent" hx-get="/config/smtp" class="transition-color tab config-tab" _="on click remove .tab-active from .config-tab then add .tab-active to me">SMTP</a>
 			<a role="tab" hx-target="#tabContent" hx-get="/config/telegram" class="transition-color tab config-tab" _="on click remove .tab-active from .config-tab then add .tab-active to me">Telegram</a>
 			<a role="tab" hx-target="#tabContent" hx-get="/config/scheduler" class="transition-color tab config-tab" _="on click remove .tab-active from .config-tab then add .tab-active to me">Планировщик</a>
 		</div>
@@ -125,24 +124,6 @@ templ AlertsTab(conf configuration.AlertsConfiguration) {
 					/>
 				</label>
 			</div>
-			<label class="form-control w-full max-w-lg">
-				<div class="label">
-					<span class="label-text">Email администратора</span>
-				</div>
-				<input
-					type="text"
-					placeholder="admin@example.com"
-					class="input input-bordered w-full max-w-lg"
-					value={ conf.Admin }
-					name="value"
-					hx-post="/api/config/alerts/admin"
-					hx-trigger="keyup changed delay:500ms"
-					hx-include="this"
-				/>
-				<div class="label">
-					<span class="label-text-alt">Email, на который должны отправляться оповещения</span>
-				</div>
-			</label>
 			<label class="form-control w-full max-w-lg">
 				<div class="label">
 					<span class="label-text">Telegram chatID администратора</span>

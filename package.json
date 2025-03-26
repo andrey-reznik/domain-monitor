@@ -5,18 +5,19 @@
     "url": "https://github.com/nwesterhausen/domain-monitor"
   },
   "scripts": {
-    "build": "pnpm build:htmx && pnpm build:hyperscript && pnpm build:tailwind",
+    "build": "bun run build:htmx && bun run build:hyperscript && bun run build:tailwind",
     "build:hyperscript": "cp node_modules/hyperscript.org/dist/_hyperscript.min.js assets/js/_hyperscript.min.js",
     "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js assets/js/htmx.min.js",
-    "build:tailwind": "tailwindcss -o ./assets/css/tailwind.css"
+    "build:tailwind": "tailwindcss -i ./assets/css/styles.css -o ./assets/css/tailwind.css"
   },
   "devDependencies": {
-    "daisyui": "^4.7.3",
+    "daisyui": "^5.0.3",
     "htmx.org": "^1.9.11",
     "hyperscript.org": "^0.9.12",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^4.0.13"
   },
   "dependencies": {
+    "@tailwindcss/cli": "^4.0.13",
     "htmx-web-types": "^1.0.0"
   }
 }

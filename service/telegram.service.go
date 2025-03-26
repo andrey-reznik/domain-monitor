@@ -55,22 +55,25 @@ func (m *TelegramService) TestMessage(to string) error {
 
 	_, err := m.client.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: to,
-		Text:   "This is a test message from Domain Monitor.",
+		Text:   "Это тестовое сообщение от Domain Monitor.",
 	})
 
 	if err != nil {
-		log.Printf("❌ Failed to send test message: %s", err)
+		log.Printf("❌ Не удалось отправить тестовое сообщение: %s", err)
 		return err
 	}
 
-	log.Printf("✅ Test message sent to Telegram chat ID: %s", to)
+	log.Printf("✅ Тестовое сообщение было отправлено в Telegram, СhatID: %s", to)
 	return nil
 }
 
 func (m *TelegramService) SendAlert(to string, fqdn string, alert configuration.Alert) error {
 	ctx := context.Background()
-
-	body := fmt.Sprintf("Your domain %s is expiring in %s. Please renew it as soon as possible.", fqdn, alert)
+	msg := fmt.Sprintf("Внимание! Срок регистрации домена %s истекает через %s. Пожалуйста, примите во внимание возможность приобретения данного доменного имени после его освобождения.", fqdn, alert)
+	if alert == configuration.AlertDaily {
+		msg = fmt.Sprintf("Внимание! %s.\nСрок регистрации домена %s скоро истекает. Пожалуйста, примите во внимание возможность приобретения данного доменного имени после его освобождения.", alert, fqdn)
+	}
+	body := msg
 
 	_, err := m.client.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: to,
