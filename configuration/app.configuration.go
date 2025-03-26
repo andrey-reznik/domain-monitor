@@ -76,8 +76,6 @@ type SchedulerConfiguration struct {
 type TelegramConfiguration struct {
 	// Telegram bot id
 	BotID string `yaml:"botId" json:"botId"`
-	// Chat id
-	ChatID string `yaml:"chatId" json:"chatId"`
 	// Enable Telegram
 	Enabled bool `yaml:"enabled" json:"enabled"`
 }

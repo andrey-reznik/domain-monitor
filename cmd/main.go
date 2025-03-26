@@ -39,12 +39,12 @@ func main() {
 	if config.Config.Alerts.SendAlerts {
 		if !config.Config.Telegram.Enabled {
 			log.Println("❌ Telegram notifications are disabled")
-		} else if len(config.Config.Telegram.BotID) == 0 || len(config.Config.Telegram.ChatID) == 0 {
+		} else if len(config.Config.Telegram.BotID) == 0 || len(config.Config.Alerts.TelegramAdmin) == 0 {
 			log.Println("❌ Telegram is not configured")
 			config.Config.Telegram.Enabled = false
 		} else {
 			_telegram = service.NewTelegramService(config.Config.Telegram)
-			log.Printf("📧 Alerts configured to be sent to %s", config.Config.Telegram.ChatID)
+			log.Printf("📧 Alerts configured to be sent to %s", config.Config.Alerts.TelegramAdmin)
 		}
 	} else {
 		log.Println("📵 Alerts are disabled")
@@ -89,7 +89,7 @@ func main() {
 	}
 
 	if _telegram != nil {
-		handlers.SetupTelegramRoutes(app, _telegram, config.Config.Telegram.ChatID)
+		handlers.SetupTelegramRoutes(app, _telegram, config.Config.Alerts.TelegramAdmin)
 	}
 
 	// Setup whois routes
