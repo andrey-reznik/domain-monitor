@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"golang.org/x/net/idna"
 	"log"
 
 	"github.com/nwesterhausen/domain-monitor/configuration"
@@ -16,18 +17,19 @@ func NewWhoisService(store configuration.WhoisCacheStorage) *ServicesWhois {
 }
 
 func (s *ServicesWhois) GetWhois(fqdn string) (configuration.WhoisCache, error) {
+	punycodeFqdn, _ := idna.ToASCII(fqdn)
 	for _, entry := range s.store.FileContents.Entries {
-		if entry.FQDN == fqdn {
+		if entry.FQDN == punycodeFqdn {
 			return entry, nil
 		}
 	}
-	log.Println("🙅 WHOIS entry cache miss for", fqdn)
+	log.Println("🙅 WHOIS entry cache miss for", punycodeFqdn)
 
 	// Since we cache missed, let's try to fetch the WHOIS entry instead
-	s.store.Add(fqdn)
+	s.store.Add(punycodeFqdn)
 	// Try to get the entry again
 	for _, entry := range s.store.FileContents.Entries {
-		if entry.FQDN == fqdn {
+		if entry.FQDN == punycodeFqdn {
 			return entry, nil
 		}
 	}
@@ -36,8 +38,9 @@ func (s *ServicesWhois) GetWhois(fqdn string) (configuration.WhoisCache, error) 
 }
 
 func (s *ServicesWhois) MarkAlertSent(fqdn string, alert configuration.Alert) bool {
+	punycodeFqdn, _ := idna.ToASCII(fqdn)
 	for i := range s.store.FileContents.Entries {
-		if s.store.FileContents.Entries[i].FQDN == fqdn {
+		if s.store.FileContents.Entries[i].FQDN == punycodeFqdn {
 			s.store.FileContents.Entries[i].MarkAlertSent(alert)
 			return true
 		}

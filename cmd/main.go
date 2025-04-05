@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"flag"
 	"fmt"
+	"golang.org/x/net/idna"
 	"log"
 	"os"
 	"time"
@@ -131,6 +132,7 @@ func domainExpirationCheckOnSchedule(whoisCache configuration.WhoisCacheStorage,
 	// for every domain in the domains configuration, if alerts are turned on, check the expiration from the WHOIS cache and then send an alert if one hasn't been sent.
 	for _, domain := range domains.DomainFile.Domains {
 		if domain.Alerts {
+			punycodeFqdn, _ := idna.ToASCII(domain.FQDN)
 			whoisEntry := whoisCache.Get(domain.FQDN)
 			if whoisEntry == nil {
 				log.Printf("❌ WHOIS entry for %s not found, skipping", domain.FQDN)
@@ -142,35 +144,35 @@ func domainExpirationCheckOnSchedule(whoisCache configuration.WhoisCacheStorage,
 
 			// Check the 2-month, 1-month, 2-week, 1-week, 3-day and within 1 week of expiration thresholds
 			if daysUntilExpiration <= 60 && !whoisEntry.Sent2MonthAlert && appConfig.Alerts.Send2MonthAlert {
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.Alert2Months); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.Alert2Months); err != nil {
 					log.Printf("❌ Failed to send 2-month alert for %s: %s", domain.FQDN, err)
 					continue
 				}
 				whoisEntry.MarkAlertSent(configuration.Alert2Months)
 			}
 			if daysUntilExpiration <= 30 && !whoisEntry.Sent1MonthAlert && appConfig.Alerts.Send1MonthAlert {
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.Alert1Month); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.Alert1Month); err != nil {
 					log.Printf("❌ Failed to send 1-month alert for %s: %s", domain.FQDN, err)
 					continue
 				}
 				whoisEntry.MarkAlertSent(configuration.Alert1Month)
 			}
 			if daysUntilExpiration <= 14 && !whoisEntry.Sent2WeekAlert && appConfig.Alerts.Send2WeekAlert {
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.Alert2Weeks); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.Alert2Weeks); err != nil {
 					log.Printf("❌ Failed to send 2-week alert for %s: %s", domain.FQDN, err)
 					continue
 				}
 				whoisEntry.MarkAlertSent(configuration.Alert2Weeks)
 			}
 			if daysUntilExpiration <= 7 && !whoisEntry.Sent1WeekAlert && appConfig.Alerts.Send1WeekAlert {
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.Alert1Week); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.Alert1Week); err != nil {
 					log.Printf("❌ Failed to send 1-week alert for %s: %s", domain.FQDN, err)
 					continue
 				}
 				whoisEntry.MarkAlertSent(configuration.Alert1Week)
 			}
 			if daysUntilExpiration <= 3 && !whoisEntry.Sent3DayAlert && appConfig.Alerts.Send3DayAlert {
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.Alert3Days); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.Alert3Days); err != nil {
 					log.Printf("❌ Failed to send 3-day alert for %s: %s", domain.FQDN, err)
 					continue
 				}
@@ -184,7 +186,7 @@ func domainExpirationCheckOnSchedule(whoisCache configuration.WhoisCacheStorage,
 					continue
 				}
 
-				if err := mailer.SendAlert(appConfig.Alerts.Admin, domain.FQDN, configuration.AlertDaily); err != nil {
+				if err := mailer.SendAlert(appConfig.Alerts.Admin, punycodeFqdn, configuration.AlertDaily); err != nil {
 					log.Printf("❌ Failed to send daily alert for %s: %s", domain.FQDN, err)
 					continue
 				}

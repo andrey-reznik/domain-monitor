@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"golang.org/x/net/idna"
 	"log"
 	"os"
 	"time"
@@ -52,8 +53,9 @@ func DefaultWhoisCacheStorage(path string) WhoisCacheStorage {
 
 func (w *WhoisCacheStorage) Get(fqdn string) *WhoisCache {
 	// Find the entry
+	punycodeFqdn, _ := idna.ToASCII(fqdn)
 	for i := range w.FileContents.Entries {
-		if w.FileContents.Entries[i].FQDN == fqdn {
+		if w.FileContents.Entries[i].FQDN == punycodeFqdn {
 			return &w.FileContents.Entries[i]
 		}
 	}
@@ -68,8 +70,9 @@ func (w *WhoisCacheStorage) GetAll() []WhoisCache {
 
 func (w *WhoisCacheStorage) Add(fqdn string) {
 	// Create a new entry
+	punycodeFqdn, _ := idna.ToASCII(fqdn)
 	newEntry := WhoisCache{
-		FQDN:        fqdn,
+		FQDN:        punycodeFqdn,
 		WhoisInfo:   whoisparser.WhoisInfo{},
 		LastUpdated: time.Time{},
 	}
@@ -104,9 +107,10 @@ func (w *WhoisCacheStorage) Refresh() {
 func (w *WhoisCacheStorage) RefreshWithDomains(domains DomainConfiguration) {
 	// Make sure we have whois entries for all the domains
 	for _, domain := range domains.DomainFile.Domains {
-		if w.Get(domain.FQDN) == nil {
-			log.Printf("📄 Adding WHOIS entry for %s", domain.FQDN)
-			w.Add(domain.FQDN)
+		punycodeFqdn, _ := idna.ToASCII(domain.FQDN)
+		if w.Get(punycodeFqdn) == nil {
+			log.Printf("📄 Adding WHOIS entry for %s", punycodeFqdn)
+			w.Add(punycodeFqdn)
 		}
 	}
 	// Refresh the entries
@@ -135,7 +139,8 @@ func (w *WhoisCache) IsExpired() bool {
 
 func (w *WhoisCache) Refresh() {
 	// Perform the whois query
-	whoisRaw, err := whois.Whois(w.FQDN)
+	punycodeFqdn, err := idna.ToASCII(w.FQDN)
+	whoisRaw, err := whois.Whois(punycodeFqdn)
 	if err != nil {
 		log.Printf("Error querying whois for %s: %s", w.FQDN, err)
 		return
